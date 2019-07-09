@@ -60,6 +60,45 @@ public class CompressImageUtil {
     }
 
     /**
+     *
+     * @param path 要压缩的文件
+     * @param parentPath 压缩后的文件保存的文件夹
+     * @return 压缩后的文件路径
+     */
+    public static String compressPicture(String path, String parentPath){
+        return compressPicture(path,parentPath,true);
+    }
+
+    /**
+     *
+     * @param path 要压缩的文件
+     * @param parentPath 压缩后的文件保存的文件夹
+     * @param recycle 是否使用c释放bitmap对象
+     * @return 压缩后的文件路径
+     */
+    public static String compressPicture(String path, String parentPath,boolean recycle){
+        String compressPath = null;
+        if(path != null){
+            File file = new File(path);
+            if (file.exists()) {
+                Bitmap bitmap = decodeFile(path);
+                String filePath = FileUtil.createFilePath(parentPath, UUID.randomUUID() + getExtensionName(path,".png"));
+                int quality = calculationQuality(path);
+                int i = compressBitmap(bitmap, quality, filePath, true, recycle);
+                if (!bitmap.isRecycled()) {
+                    bitmap.recycle();
+                }
+                if (i == 1) {
+                    compressPath = filePath;
+                }else{
+                    Log.e(TAG,"bitmap compress fail , file path = " + filePath);
+                }
+            }
+        }
+        return compressPath;
+    }
+
+    /**
      * 批量压缩
      * @param paths 要压缩的文件
      * @param parentPath 压缩后的文件保存的文件夹
@@ -70,23 +109,10 @@ public class CompressImageUtil {
         List<String> result = new ArrayList<>();
         if (paths != null && !paths.isEmpty()) {
             for (String path : paths) {
-                File file = new File(path);
-
-                if (file.exists()) {
-                    Bitmap bitmap = decodeFile(path);
-                    String filePath = FileUtil.createFilePath(parentPath, UUID.randomUUID() + getExtensionName(path,".png"));
-                    int quality = calculationQuality(path);
-                    int i = compressBitmap(bitmap, quality, filePath, true, recycle);
-                    if (!bitmap.isRecycled()) {
-                        bitmap.recycle();
-                    }
-                    if (i == 1) {
-                        result.add(filePath);
-                    }else{
-                        Log.e(TAG,"bitmap compress fail , file path = " + filePath);
-                    }
+                String compressPath = compressPicture(path, parentPath, recycle);
+                if(compressPath != null){
+                    result.add(compressPath);
                 }
-
             }
         }
         return result;
